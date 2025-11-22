@@ -1,0 +1,21 @@
+# Exclude large binary game assets and archives
+*.zip
+*.z64
+*.nds
+*.gbc
+*.gba
+*.nes
+samples/
+system/
+assets.zip
+assets/system/
+assets/samples/
+assets/bios/
+
+# Build artifacts
+*.log
+*.tmp
+*.cache
+dist/
+build/
+node_modules/
