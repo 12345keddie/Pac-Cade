@@ -470,8 +470,20 @@ async function startEmulatorUrl(core, url, theme) {
     try {
       const romRes = await fetch(window.EJS_gameUrl, { cache: 'no-store' });
       const biosRes = await fetch(window.EJS_biosUrl, { cache: 'no-store' });
-      if (!romRes.ok) throw new Error('ROM HTTP ' + romRes.status);
-      if (!biosRes.ok) throw new Error('BIOS HTTP ' + biosRes.status);
+      if (!romRes.ok) {
+        try {
+          const alt = 'https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/' + encodeURIComponent(url);
+          const altRes = await fetch(alt, { cache: 'no-store' });
+          if (altRes.ok) { window.EJS_gameUrl = alt; romRes = altRes; } else { throw new Error('ROM HTTP ' + romRes.status); }
+        } catch { throw new Error('ROM HTTP ' + romRes.status); }
+      }
+      if (!biosRes.ok) {
+        try {
+          const altB = 'https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/' + encodeURIComponent('bios_CD_E.bin');
+          const altBRes = await fetch(altB, { cache: 'no-store' });
+          if (altBRes.ok) { window.EJS_biosUrl = altB; biosRes = altBRes; } else { throw new Error('BIOS HTTP ' + biosRes.status); }
+        } catch { throw new Error('BIOS HTTP ' + biosRes.status); }
+      }
       const head = await romRes.clone().arrayBuffer().then(b => String.fromCharCode.apply(null, Array.from(new Uint8Array(b).slice(0,64)))).catch(()=>' ');
       if (/git-lfs/i.test(head)) throw new Error('ROM not available in deployment');
     } catch (e) {
