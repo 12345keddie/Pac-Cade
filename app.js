@@ -1401,7 +1401,24 @@ function setupNavigation() {
   function gameActionTemplate() {
     const base = String((state.selectedGame?.rom || '').replace(/\.[^/.]+$/, '')).toLowerCase();
     const core = String(state.selectedGame?.core || '').toLowerCase();
-  if (core === 'mame32' || core === 'mame2003') {
+    if (core === 'n64') {
+      return [
+        { name: 'Analog Up', target: 'KeyW', default: 'KeyW' },
+        { name: 'Analog Down', target: 'KeyS', default: 'KeyS' },
+        { name: 'Analog Left', target: 'KeyA', default: 'KeyA' },
+        { name: 'Analog Right', target: 'KeyD', default: 'KeyD' },
+        { name: 'C-Up', target: 'KeyI', default: 'KeyI' },
+        { name: 'C-Down', target: 'KeyK', default: 'KeyK' },
+        { name: 'C-Left', target: 'KeyJ', default: 'KeyJ' },
+        { name: 'C-Right', target: 'KeyL', default: 'KeyL' },
+        { name: 'A', target: 'Space', default: 'Space' },
+        { name: 'B', target: 'KeyF', default: 'KeyF' },
+        { name: 'Z', target: 'ShiftLeft', default: 'ShiftLeft' },
+        { name: 'R', target: 'KeyR', default: 'KeyR' },
+        { name: 'Start', target: 'Enter', default: 'Enter' },
+      ];
+    }
+    if (core === 'mame32' || core === 'mame2003') {
       if (base === 'ssf2t') {
         return [
           { name: 'Up', target: 'ArrowUp', default: 'KeyW' },
