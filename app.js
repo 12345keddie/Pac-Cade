@@ -447,7 +447,7 @@ async function startEmulator(core, file, theme) {
   window.EJS_enable_sound = true;
   window.EJS_gamepad = true;
   const s = document.createElement('script');
-  s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  s.src = 'https://cdn.emulatorjs.com/loader.js';
   try { s.crossOrigin = 'anonymous'; } catch {}
   s.async = true;
   s.onload = () => console.log('Emulator loaded');
@@ -473,7 +473,7 @@ async function startEmulatorUrl(core, url, theme) {
   window.EJS_enable_sound = true;
   window.EJS_gamepad = true;
   const s = document.createElement('script');
-  s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  s.src = 'https://cdn.emulatorjs.com/loader.js';
   try { s.crossOrigin = 'anonymous'; } catch {}
   s.async = true;
   s.onload = () => console.log('Emulator loaded');
