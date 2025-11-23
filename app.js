@@ -556,7 +556,15 @@ function mountEmulatrix(theme, innerPage) {
             checks++;
             console.warn('[Arcade] Emulator not ready, retry', checks);
             if (checks === 2 && inner.contentWindow?.reloadROM) { console.log('[Arcade] Trigger reloadROM()'); inner.contentWindow.reloadROM(); }
-                    if (checks === 4 && inner.contentWindow?.Module) { try { console.log('[Arcade] Direct callMain fallback'); inner.contentWindow.Module.callMain(["-v","/game.nes"]); } catch (e) { console.warn('[Arcade] callMain fallback failed', e); } }
+                    if (checks === 4 && inner.contentWindow?.Module) {
+                      try {
+                        const nm = String(window.ROMNAME || 'game.nes');
+                        const ext = (nm.split('.').pop() || 'nes').toLowerCase();
+                        const path = `/game.${ext}`;
+                        console.log('[Arcade] Direct callMain fallback', path);
+                        inner.contentWindow.Module.callMain(["-v", path]);
+                      } catch (e) { console.warn('[Arcade] callMain fallback failed', e); }
+                    }
                     if (checks < 6) setTimeout(watcher, 1500);
                   } catch (e) {
                     console.warn('[Arcade] watcher error', e);
