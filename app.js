@@ -1749,6 +1749,9 @@ async function exitFullscreen() {
     const m = String(c).match(/^Key([A-Z])$/); if (m) return m[1].toLowerCase();
     const d = String(c).match(/^Digit(\d)$/); if (d) return d[1];
     if (c === 'Space') return ' ';
+    if (c === 'ShiftLeft' || c === 'ShiftRight') return 'Shift';
+    if (c === 'ControlLeft' || c === 'ControlRight') return 'Control';
+    if (c === 'AltLeft' || c === 'AltRight') return 'Alt';
     return c;
   }
   function keyCodeFromCode(code) {
@@ -1759,6 +1762,9 @@ async function exitFullscreen() {
     if (d) return 48 + parseInt(d[1], 10);
     if (s === 'Space') return 32;
     if (s === 'Enter') return 13;
+    if (s === 'ShiftLeft' || s === 'ShiftRight' || s === 'Shift') return 16;
+    if (s === 'ControlLeft' || s === 'ControlRight' || s === 'Control') return 17;
+    if (s === 'AltLeft' || s === 'AltRight' || s === 'Alt') return 18;
     if (s === 'ArrowUp') return 38;
     if (s === 'ArrowDown') return 40;
     if (s === 'ArrowLeft') return 37;
