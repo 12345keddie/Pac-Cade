@@ -701,6 +701,10 @@ function mountN64(theme, romUrl) {
             return res.arrayBuffer();
           }).then(function(buf){
             var bytes = new Uint8Array(buf);
+            try {
+              var s = String.fromCharCode.apply(null, Array.from(bytes.slice(0, 64)));
+              if (/git-lfs/i.test(s)) throw new Error('ROM not available in deployment');
+            } catch(e){}
             try { window.myApp.rivetsData.showFPS = false; } catch(e){}
             try { window.myApp.setToLocalStorage('n64wasm-showfps','showFPS'); } catch(e){}
             try {
@@ -852,6 +856,10 @@ async function startEmulatrixFromUrl(url, theme, innerPage) {
     const res = await fetch(safeUrl);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = new Uint8Array(await res.arrayBuffer());
+    try {
+      const head = String.fromCharCode.apply(null, Array.from(data.slice(0, 64)));
+      if (/git-lfs/i.test(head)) throw new Error('ROM not available in deployment');
+    } catch {}
     setEmulatrixGlobals(name, data);
     mountEmulatrix(theme, innerPage);
   } catch (e) {
