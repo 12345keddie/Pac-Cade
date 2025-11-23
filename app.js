@@ -438,11 +438,15 @@ async function startEmulator(core, file, theme) {
   window.EJS_player = theme === 'arcade' ? '#emulator' : '#emulator-console';
   window.EJS_core = core;
   window.EJS_gameUrl = url;
+  if (String(core||'').toLowerCase() === 'segacd' || String(core||'').toLowerCase() === 'segacd') {
+    window.EJS_biosUrl = 'bios_CD_E.bin';
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  }
   window.EJS_enable_savestates = true;
   window.EJS_enable_sound = true;
   window.EJS_gamepad = true;
   const s = document.createElement('script');
-  s.src = 'https://cdn.emulatorjs.com/loader.js';
+  s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
   s.async = true;
   s.onload = () => console.log('Emulator loaded');
   document.body.appendChild(s);
@@ -458,11 +462,15 @@ async function startEmulatorUrl(core, url, theme) {
   window.EJS_player = theme === 'arcade' ? '#emulator' : '#emulator-console';
   window.EJS_core = core;
   window.EJS_gameUrl = url;
+  if (String(core||'').toLowerCase() === 'segacd' || String(core||'').toLowerCase() === 'sega cd') {
+    window.EJS_biosUrl = 'bios_CD_E.bin';
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  }
   window.EJS_enable_savestates = true;
   window.EJS_enable_sound = true;
   window.EJS_gamepad = true;
   const s = document.createElement('script');
-  s.src = 'https://cdn.emulatorjs.com/loader.js';
+  s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
   s.async = true;
   s.onload = () => console.log('Emulator loaded');
   document.body.appendChild(s);

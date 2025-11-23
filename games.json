@@ -16,5 +16,6 @@
     , { "name": "Mario Kart 64", "core": "n64", "rom": "Mario Kart 64.z64", "aspect": "4/3" }
     , { "name": "Banjo-Kazooie", "core": "n64", "rom": "Banjo-Kazooie.z64", "aspect": "4/3" }
     , { "name": "Plants vs. Zombies", "core": "ds", "rom": "Plants vs. Zombies.nds", "aspect": "2/3" }
+    , { "name": "Sonic CD", "core": "segaCD", "rom": "Sonic CD (Europe).chd", "aspect": "4/3" }
   ]
 }
