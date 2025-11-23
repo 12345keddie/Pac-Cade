@@ -463,11 +463,22 @@ async function startEmulatorUrl(core, url, theme) {
   container.innerHTML = '';
   window.EJS_player = theme === 'arcade' ? '#emulator' : '#emulator-console';
   window.EJS_core = core;
-  window.EJS_gameUrl = encodeURI(url);
+  window.EJS_gameUrl = encodeURI(new URL(url, location.href).toString());
   if (String(core||'').toLowerCase() === 'segacd' || String(core||'').toLowerCase() === 'sega cd') {
     window.EJS_biosUrl = encodeURI(new URL('bios_CD_E.bin', location.href).toString());
     window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-    try { fetch(window.EJS_biosUrl, { method: 'HEAD', cache: 'no-store' }).then(()=>{}).catch(()=>{}); } catch {}
+    try {
+      const romRes = await fetch(window.EJS_gameUrl, { cache: 'no-store' });
+      const biosRes = await fetch(window.EJS_biosUrl, { cache: 'no-store' });
+      if (!romRes.ok) throw new Error('ROM HTTP ' + romRes.status);
+      if (!biosRes.ok) throw new Error('BIOS HTTP ' + biosRes.status);
+      const head = await romRes.clone().arrayBuffer().then(b => String.fromCharCode.apply(null, Array.from(new Uint8Array(b).slice(0,64)))).catch(()=>' ');
+      if (/git-lfs/i.test(head)) throw new Error('ROM not available in deployment');
+    } catch (e) {
+      const t = qs('#game-title');
+      if (t) t.textContent = 'Failed to load Sega CD (' + e.message + ')';
+      return;
+    }
   }
   window.EJS_enable_savestates = true;
   window.EJS_enable_sound = true;
