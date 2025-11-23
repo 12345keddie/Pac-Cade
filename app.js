@@ -1079,6 +1079,14 @@ function setupNavigation() {
         }
         return { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', a:'KeyA', b:'KeyS', x:'KeyQ', y:'KeyW', lb:'KeyD', rb:'KeyE', start:'Enter', select:'Digit1' };
       }
+      if (c === 'n64') {
+        // Map to n64wasm defaults: analog WASD, C keys IJKL, A Space, B F, Z ShiftLeft, R R, Start Enter
+        return {
+          up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD',
+          a:'Space', b:'KeyF', x:'KeyK', y:'KeyI',
+          lb:'ShiftLeft', rb:'KeyR', start:'Enter', select:'Digit1'
+        };
+      }
       return { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', a:'KeyX', b:'KeyZ', x:'KeyX', y:'KeyZ', lb:'ShiftRight', rb:'Enter', start:'Enter', select:'ShiftRight' };
     }
     function key(code, down) {
@@ -1108,7 +1116,7 @@ function setupNavigation() {
     function tick() {
       if (!running) return;
       const c = core();
-      if (c === 'n64' || c === 'ds' || c === 'nds') { requestAnimationFrame(tick); return; }
+      if (c === 'ds' || c === 'nds') { requestAnimationFrame(tick); return; }
       const tWin = (()=>{ try { return getEmulatorTargetWindow(); } catch { return window; } })();
       const pads = (tWin.navigator?.getGamepads && tWin.navigator.getGamepads()) || (navigator.getGamepads && navigator.getGamepads()) || (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) || [];
       const gp = pads && Array.from(pads).find(p => p && p.connected) || pads[0] || null;
