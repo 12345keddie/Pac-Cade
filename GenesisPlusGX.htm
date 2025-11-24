@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Sega CD (Genesis Plus GX)</title>
+    <style>
+      html,body{height:100%;margin:0;background:#000;color:#ddd;font-family:system-ui,Segoe UI,Arial,sans-serif}
+      #container{position:absolute;inset:0}
+      #canvas{display:block;width:100% !important;height:100% !important}
+    </style>
+    <script src="genesis_plus_gx_libretro.js"></script>
+  </head>
+  <body>
+    <div id="container"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></div>
+    <script>
+      var container_width, container_height;
+      var settings_file = "";
+      var settings_Checker;
+      function loadRomIntoVD(){
+        var dataView = new Uint8Array(parent.ROMDATA);
+        var ext = String(parent.ROMNAME||'').split('.').pop().toLowerCase();
+        var fn = 'game.' + (ext||'bin');
+        FS.createDataFile('/', fn, dataView, true, false);
+        FS.createFolder('/home/web_user', 'retroarch', true, true);
+        FS.createFolder('/home/web_user/retroarch', 'userdata', true, true);
+        FS.createFolder('/home/web_user/retroarch/userdata', 'system', true, true);
+        settings_file += "rgui_browser_directory = /\n";
+        settings_file += "system_directory = /home/web_user/retroarch/userdata/system\n";
+        settings_file += "video_scale = 1\n";
+        settings_file += "audio_latency = 128\n";
+        settings_file += "menu_enable_widgets = false\n";
+        FS.createDataFile('/home/web_user/retroarch/userdata', 'retroarch.cfg', settings_file, true, true);
+      }
+      function checkSettingsFile(){
+        var mustStart = false;
+        try{
+          var myTempFile = FS.readFile('/home/web_user/retroarch/userdata/retroarch.cfg');
+          if (myTempFile.length==settings_file.length){ mustStart = true; }
+        } catch(e){}
+        if (mustStart==true){
+          clearInterval(settings_Checker);
+          setTimeout(function(){ startEmulator(); }, 500);
+        }
+      }
+      function startEmulator(){
+        var base = String(parent.ROMNAME||'game.chd');
+        var ext = (base.split('.').pop()||'chd').toLowerCase();
+        var path = '/game.'+ext;
+        var biosName = 'bios_CD_E.bin';
+        fetch(biosName).then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); }).then(function(buf){
+          var biosData = new Uint8Array(buf);
+          FS.createDataFile('/home/web_user/retroarch/userdata/system', biosName, biosData, true, true);
+          Module.callMain(['-v', path]);
+          resizeEmulatorCanvas();
+          setTimeout(function(){ resizeEmulatorCanvas(); }, 600);
+        }).catch(function(e){ console.error('BIOS error', e); });
+      }
+      function resizeEmulatorCanvas(){
+        try{
+          container_width = document.getElementById('container').offsetWidth;
+          container_height = document.getElementById('container').offsetHeight;
+          Module.setCanvasSize(container_width, container_height, true);
+        } catch(e){}
+      }
+      function toggleSound(v){ try{ if(v){ Module.SDL2.audioContext.resume(); } else { Module.SDL2.audioContext.suspend(); } }catch(e){} }
+      function reloadROM(){ try{ var base = String(parent.ROMNAME||'game.chd'); var ext = (base.split('.').pop()||'chd').toLowerCase(); Module.callMain(['-v','/game.'+ext]); }catch(e){} }
+      function applyCoreOptions(opts){}
+      window.addEventListener('load', function(){
+        if (typeof Module==='object'){ Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; }; }
+        loadRomIntoVD();
+        settings_Checker = setInterval(checkSettingsFile, 300);
+        document.getElementById('container').focus();
+      });
+    </script>
+  </body>
+  </html>

@@ -432,8 +432,8 @@ async function startEmulator(core, file, theme) {
   if (String(core || '').toLowerCase() === 'ds' || String(core || '').toLowerCase() === 'nds') { await startDSFromFile(file, theme); return; }
   if (String(core || '').toLowerCase() === 'segacd' || String(core || '').toLowerCase() === 'sega cd') {
     const buf = await file.arrayBuffer();
-    setEmulatrixGlobals(file.name, buf);
-    mountEmulatrix(theme, 'Emulatrix_SegaCD.htm');
+    setRunnerGlobals(file.name, buf);
+    mountGenesisPlusGX(theme);
     return;
   }
   const innerCandidate = await preferEmulatrix(core, file?.name);
@@ -475,8 +475,8 @@ async function startEmulatorUrl(core, url, theme) {
       if (!r.ok) throw new Error('ROM HTTP ' + r.status);
       const b = await r.arrayBuffer();
       const n = String(u.split('/').pop() || 'game.chd');
-      setEmulatrixGlobals(n, b);
-      mountEmulatrix(theme, 'Emulatrix_SegaCD.htm');
+      setRunnerGlobals(n, b);
+      mountGenesisPlusGX(theme);
       return;
     } catch (e) {
       const t = qs('#game-title');
@@ -538,6 +538,11 @@ function setEmulatrixGlobals(name, data) {
   window.STRING_STARTINGEMULATOR = 'Starting Emulator';
   window.STATE_CHECK_TIMES = 2;
   window.goBackButtonResetIncrement = () => {};
+}
+
+function setRunnerGlobals(name, data) {
+  window.ROMNAME = name;
+  window.ROMDATA = data;
 }
 
 function mountEmulatrix(theme, innerPage) {
@@ -660,6 +665,30 @@ function mountEmulatrix(theme, innerPage) {
         }
       }
     } catch (e) {}
+  });
+  container.appendChild(iframe);
+}
+
+function mountGenesisPlusGX(theme) {
+  const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
+  container.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.src = 'GenesisPlusGX.htm';
+  iframe.allow = 'gamepad; autoplay; fullscreen';
+  iframe.setAttribute('allowfullscreen', 'true');
+  iframe.setAttribute('frameborder', '0');
+  iframe.addEventListener('load', () => {
+    try {
+      const cw = iframe.contentWindow;
+      try { cw.toggleSound && cw.toggleSound(true); } catch {}
+      setTimeout(() => {
+        try {
+          const hostWrap = (theme === 'arcade' ? qs('#emulator') : qs('#emulator-console'));
+          const hostWin = iframe.contentWindow;
+          hostWin?.dispatchEvent(new hostWin.Event('resize'));
+        } catch {}
+      }, 1200);
+    } catch {}
   });
   container.appendChild(iframe);
 }
