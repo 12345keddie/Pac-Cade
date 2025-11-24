@@ -430,6 +430,12 @@ function backToRoom() {
 async function startEmulator(core, file, theme) {
   if (String(core || '').toLowerCase() === 'n64') { await startN64FromFile(file, theme); return; }
   if (String(core || '').toLowerCase() === 'ds' || String(core || '').toLowerCase() === 'nds') { await startDSFromFile(file, theme); return; }
+  if (String(core || '').toLowerCase() === 'segacd' || String(core || '').toLowerCase() === 'sega cd') {
+    const buf = await file.arrayBuffer();
+    setEmulatrixGlobals(file.name, buf);
+    mountEmulatrix(theme, 'Emulatrix_SegaCD.htm');
+    return;
+  }
   const innerCandidate = await preferEmulatrix(core, file?.name);
   if (innerCandidate) { await startEmulatrixFromFile(file, theme, innerCandidate); return; }
   const url = URL.createObjectURL(file);
@@ -457,6 +463,27 @@ async function startEmulator(core, file, theme) {
 async function startEmulatorUrl(core, url, theme) {
   if (String(core || '').toLowerCase() === 'n64') { await startN64FromUrl(url, theme); return; }
   if (String(core || '').toLowerCase() === 'ds' || String(core || '').toLowerCase() === 'nds') { await startDSFromUrl(url, theme); return; }
+  if (String(core || '').toLowerCase() === 'segacd' || String(core || '').toLowerCase() === 'sega cd') {
+    try {
+      let u = new URL(url, location.href).toString();
+      let r = await fetch(u);
+      if (!r.ok) {
+        const alt = 'https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/' + encodeURIComponent(url);
+        const ra = await fetch(alt);
+        if (ra.ok) { u = alt; r = ra; }
+      }
+      if (!r.ok) throw new Error('ROM HTTP ' + r.status);
+      const b = await r.arrayBuffer();
+      const n = String(u.split('/').pop() || 'game.chd');
+      setEmulatrixGlobals(n, b);
+      mountEmulatrix(theme, 'Emulatrix_SegaCD.htm');
+      return;
+    } catch (e) {
+      const t = qs('#game-title');
+      if (t) t.textContent = 'Failed to load Sega CD (' + e.message + ')';
+      return;
+    }
+  }
   const innerCandidate = await preferEmulatrix(core, url);
   if (innerCandidate) { await startEmulatrixFromUrl(url, theme, innerCandidate); return; }
   const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
