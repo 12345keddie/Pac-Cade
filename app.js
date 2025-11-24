@@ -468,8 +468,8 @@ async function startEmulatorUrl(core, url, theme) {
     window.EJS_biosUrl = encodeURI(new URL('bios_CD_E.bin', location.href).toString());
     window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
     try {
-      const romRes = await fetch(window.EJS_gameUrl, { cache: 'no-store' });
-      const biosRes = await fetch(window.EJS_biosUrl, { cache: 'no-store' });
+      const romRes = await fetch(window.EJS_gameUrl);
+      const biosRes = await fetch(window.EJS_biosUrl);
       if (!romRes.ok) {
         try {
           const alt = 'https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/' + encodeURIComponent(url);
