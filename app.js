@@ -681,6 +681,7 @@ function mountGenesisPlusGX(theme) {
     #container{position:absolute;inset:0}
     #canvas{display:block;width:100% !important;height:100% !important}
   </style>
+  <script>window.Module = window.Module || {}; Module.canvas = document.createElement('canvas'); Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; };</script>
   <script src="genesis_plus_gx_libretro.js"></script>
   </head><body>
     <div id="container"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></div>
