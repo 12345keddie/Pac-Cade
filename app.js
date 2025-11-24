@@ -708,21 +708,29 @@ function mountGenesisPlusGX(theme) {
       function startEmulator(){
         var base=String(parent.ROMNAME||'game.chd'); var ext=(base.split('.').pop()||'chd').toLowerCase(); var path='/game.'+ext;
         var biosName='bios_CD_E.bin';
-        fetch(biosName).then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); }).then(function(buf){
-          var biosData=new Uint8Array(buf);
-          FS.createDataFile('/home/web_user/retroarch/userdata/system', biosName, biosData, true, true);
-          Module.callMain(['-v', path]);
-          resizeEmulatorCanvas(); setTimeout(function(){ resizeEmulatorCanvas(); }, 600);
-        }).catch(function(e){ console.error('BIOS error', e); });
+        var biosUrl=(function(){ try { return new URL(biosName, parent.location.href).toString(); } catch(e){ return biosName; } })();
+        fetch(biosUrl)
+          .then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); })
+          .catch(function(){
+            var alt='https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/'+encodeURIComponent(biosName);
+            return fetch(alt).then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); });
+          })
+          .then(function(buf){
+            var biosData=new Uint8Array(buf);
+            FS.createDataFile('/home/web_user/retroarch/userdata/system', biosName, biosData, true, true);
+            Module.callMain(['-v', path]);
+            resizeEmulatorCanvas(); setTimeout(function(){ resizeEmulatorCanvas(); }, 600);
+          })
+          .catch(function(e){ console.error('BIOS error', e); });
       }
       function resizeEmulatorCanvas(){ try { container_width=document.getElementById('container').offsetWidth; container_height=document.getElementById('container').offsetHeight; Module.setCanvasSize(container_width, container_height, true); } catch(e){} }
       function toggleSound(v){ try{ if(v){ Module.SDL2.audioContext.resume(); } else { Module.SDL2.audioContext.suspend(); } }catch(e){} }
       function reloadROM(){ try{ var base=String(parent.ROMNAME||'game.chd'); var ext=(base.split('.').pop()||'chd').toLowerCase(); Module.callMain(['-v','/game.'+ext]); }catch(e){} }
       function applyCoreOptions(opts){}
+      function wait(){ return new Promise(function(resolve){ function check(){ try { if (window.Module && window.FS && typeof Module.callMain==='function') { resolve(); return; } } catch(e){} setTimeout(check, 100); } check(); }); }
       window.addEventListener('load', function(){
-        if (typeof Module==='object'){ Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; }; }
-        loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300);
-        document.getElementById('container').focus();
+        if (typeof Module==='object'){ Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; }; Module.canvas = document.getElementById('canvas'); }
+        wait().then(function(){ loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300); document.getElementById('container').focus(); });
       });
     })();</script>
   </body></html>`;
