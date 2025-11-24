@@ -681,8 +681,12 @@ function mountGenesisPlusGX(theme) {
     #container{position:absolute;inset:0}
     #canvas{display:block;width:100% !important;height:100% !important}
   </style>
-  <script>window.Module = window.Module || {}; Module.canvas = document.createElement('canvas'); Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; };</script>
-  <script src="genesis_plus_gx_libretro.js"></script>
+  <script>
+    window.Module = window.Module || {};
+    Module.canvas = document.createElement('canvas');
+    Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; };
+    window.onerror = function(msg, src, line, col){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent = 'Sega CD Error: '+msg); } catch(e){} };
+  </script>
   </head><body>
     <div id="container"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></div>
     <script>(function(){
@@ -729,9 +733,16 @@ function mountGenesisPlusGX(theme) {
       function reloadROM(){ try{ var base=String(parent.ROMNAME||'game.chd'); var ext=(base.split('.').pop()||'chd').toLowerCase(); Module.callMain(['-v','/game.'+ext]); }catch(e){} }
       function applyCoreOptions(opts){}
       function wait(){ return new Promise(function(resolve){ function check(){ try { if (window.Module && window.FS && typeof Module.callMain==='function') { resolve(); return; } } catch(e){} setTimeout(check, 100); } check(); }); }
+      window.onerror = function(msg, src, line, col){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent = 'Sega CD Error: '+msg+' '+(src||'')); } catch(e){} };
       window.addEventListener('load', function(){
         if (typeof Module==='object'){ Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; }; Module.canvas = document.getElementById('canvas'); }
-        wait().then(function(){ loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300); document.getElementById('container').focus(); });
+        try {
+          var s = document.createElement('script');
+          s.src = 'genesis_plus_gx_libretro.js';
+          s.onerror = function(){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent = 'Sega CD Error: core script failed to load'); } catch(e){} };
+          s.onload = function(){ wait().then(function(){ loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300); document.getElementById('container').focus(); }); };
+          document.head.appendChild(s);
+        } catch(e) { console.error('Core load inject error', e); }
       });
     })();</script>
   </body></html>`;
