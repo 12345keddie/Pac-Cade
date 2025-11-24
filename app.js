@@ -511,7 +511,7 @@ async function startEmulatorUrl(core, url, theme) {
           if (altBRes.ok) { window.EJS_biosUrl = altB; biosRes = altBRes; } else { throw new Error('BIOS HTTP ' + biosRes.status); }
         } catch { throw new Error('BIOS HTTP ' + biosRes.status); }
       }
-      const head = await romRes.clone().arrayBuffer().then(b => String.fromCharCode.apply(null, Array.from(new Uint8Array(b).slice(0,64)))).catch(()=>' ');
+      const head = await romRes.clone().arrayBuffer().then(b => String.fromCharCode.apply(null, Array.from(new Uint8Array(b).slice(0,64)))).catch(()=>"\u0000");
       if (/git-lfs/i.test(head)) throw new Error('ROM not available in deployment');
     } catch (e) {
       const t = qs('#game-title');
