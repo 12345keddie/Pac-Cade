@@ -291,10 +291,11 @@ class MyClass {
                 latencyHint: 'interactive',
                 sampleRate: 44100, //this number has to match what's in gui.cpp
             });
+            try { if (this.audioContext.state !== 'running') { this.audioContext.resume(); } } catch(e){}
             this.gainNode = this.audioContext.createGain();
             this.gainNode.gain.value = 0.5;
             this.gainNode.connect(this.audioContext.destination);
-    
+
             //point at where the emulator is storing the audio buffer
             this.audioBufferResampled = new Int16Array(Module.HEAP16.buffer,Module._neilGetSoundBufferResampledAddress(),64000);
     

@@ -296,6 +296,19 @@ const Account = (() => {
   };
 })();
 
+try {
+  function showErrorBanner(msg){
+    try {
+      var b = document.getElementById('error-banner');
+      if(!b){ b = document.createElement('div'); b.id = 'error-banner'; b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#8b0000;color:#fff;padding:8px 12px;font:13px system-ui'; document.body.appendChild(b); }
+      b.textContent = String(msg||'');
+    } catch{}
+  }
+  window.showErrorBanner = showErrorBanner;
+  window.addEventListener('error', function(e){ try { var msg = 'Error: ' + String(e?.message||'') + (e?.filename?(' @ '+e.filename):''); var t = qs('#game-title'); if (t) t.textContent = msg; document.title = msg; showErrorBanner(msg); } catch{} });
+  window.addEventListener('unhandledrejection', function(e){ try { var m = ''; try { m = String(e?.reason?.message||e?.reason||''); } catch{} var msg = 'Error: ' + m; var t = qs('#game-title'); if (t) t.textContent = msg; document.title = msg; showErrorBanner(msg); } catch{} });
+} catch {}
+
 function showRoom(room) {
   state.currentRoom = room;
   state.currentView = 'room';
@@ -431,9 +444,25 @@ async function startEmulator(core, file, theme) {
   if (String(core || '').toLowerCase() === 'n64') { await startN64FromFile(file, theme); return; }
   if (String(core || '').toLowerCase() === 'ds' || String(core || '').toLowerCase() === 'nds') { await startDSFromFile(file, theme); return; }
   if (String(core || '').toLowerCase() === 'segacd' || String(core || '').toLowerCase() === 'sega cd') {
-    const buf = await file.arrayBuffer();
-    setRunnerGlobals(file.name, buf);
-    mountGenesisPlusGX(theme);
+    const url = URL.createObjectURL(file);
+    const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
+    container.innerHTML = '';
+    window.EJS_player = theme === 'arcade' ? '#emulator' : '#emulator-console';
+    window.EJS_core = 'segaCD';
+    window.EJS_gameUrl = url;
+    window.EJS_biosUrl = new URL('bios_CD_U.bin', location.href).toString();
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_enable_savestates = true;
+    window.EJS_enable_sound = true;
+    window.EJS_gamepad = true;
+    window.EJS_threads = true;
+    try { document.addEventListener('click', function(){ try { if (window.EJS_emulator && typeof window.EJS_emulator.resumeAudio === 'function') window.EJS_emulator.resumeAudio(); } catch{} try { if (window.Module && window.Module.SDL2 && window.Module.SDL2.audioContext && typeof window.Module.SDL2.audioContext.resume === 'function') window.Module.SDL2.audioContext.resume(); } catch{} }); } catch {}
+    const s = document.createElement('script');
+    s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+    try { s.crossOrigin = 'anonymous'; } catch {}
+    s.async = true;
+    s.onload = () => console.log('Emulator loaded');
+    document.body.appendChild(s);
     return;
   }
   const innerCandidate = await preferEmulatrix(core, file?.name);
@@ -465,24 +494,30 @@ async function startEmulatorUrl(core, url, theme) {
   if (String(core || '').toLowerCase() === 'ds' || String(core || '').toLowerCase() === 'nds') { await startDSFromUrl(url, theme); return; }
   if (String(core || '').toLowerCase() === 'segacd' || String(core || '').toLowerCase() === 'sega cd') {
     try {
-      let u = new URL(url, location.href).toString();
-      let r = await fetch(u);
-      if (!r.ok) {
-        const alt = 'https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/' + encodeURIComponent(url);
-        const ra = await fetch(alt);
-        if (ra.ok) { u = alt; r = ra; }
-      }
-      if (!r.ok) throw new Error('ROM HTTP ' + r.status);
-      const b = await r.arrayBuffer();
-      const n = String(u.split('/').pop() || 'game.chd');
-      setRunnerGlobals(n, b);
-      mountGenesisPlusGX(theme);
-      return;
+      const u = new URL(url, location.href).toString();
+      const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
+      container.innerHTML = '';
+      window.EJS_player = theme === 'arcade' ? '#emulator' : '#emulator-console';
+      window.EJS_core = 'segaCD';
+      window.EJS_gameUrl = u;
+      window.EJS_biosUrl = new URL('bios_CD_U.bin', location.href).toString();
+      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+      window.EJS_enable_savestates = true;
+      window.EJS_enable_sound = true;
+      window.EJS_gamepad = true;
+      window.EJS_threads = true;
+      try { document.addEventListener('click', function(){ try { if (window.EJS_emulator && typeof window.EJS_emulator.resumeAudio === 'function') window.EJS_emulator.resumeAudio(); } catch{} try { if (window.Module && window.Module.SDL2 && window.Module.SDL2.audioContext && typeof window.Module.SDL2.audioContext.resume === 'function') window.Module.SDL2.audioContext.resume(); } catch{} }); } catch {}
+      const s = document.createElement('script');
+      s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+      try { s.crossOrigin = 'anonymous'; } catch {}
+      s.async = true;
+      s.onload = () => console.log('Emulator loaded');
+      document.body.appendChild(s);
     } catch (e) {
       const t = qs('#game-title');
-      if (t) t.textContent = 'Failed to load Sega CD (' + e.message + ')';
-      return;
+      if (t) t.textContent = 'Failed to start Sega CD (' + e.message + ')';
     }
+    return;
   }
   const innerCandidate = await preferEmulatrix(core, url);
   if (innerCandidate) { await startEmulatrixFromUrl(url, theme, innerCandidate); return; }
@@ -589,6 +624,7 @@ function mountEmulatrix(theme, innerPage) {
                 const style2 = idoc.createElement('style');
                 style2.textContent = `
                   .gui_nintendo_keyselect, .gui_nintendo_keystart, .gui_nintendo_keyb, .gui_nintendo_keya,
+                  .gui_supernintendo_keyselect, .gui_supernintendo_keystart, .gui_supernintendo_keyb, .gui_supernintendo_keya, .gui_supernintendo_keyx, .gui_supernintendo_keyy, .gui_supernintendo_keyl, .gui_supernintendo_keyr,
                   .gui_joystick, .gui_loading, .gui_saving { display: none !important; pointer-events: none !important; }
                   html, body { height: 100%; background: #000; }
                 `;
@@ -669,6 +705,17 @@ function mountEmulatrix(theme, innerPage) {
   container.appendChild(iframe);
 }
 
+function mountSonicCD(theme) {
+  const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
+  container.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.allow = 'gamepad; autoplay; fullscreen';
+  iframe.setAttribute('allowfullscreen', 'true');
+  iframe.setAttribute('frameborder', '0');
+  iframe.src = 'soniccd.html';
+  container.appendChild(iframe);
+}
+
 function mountGenesisPlusGX(theme) {
   const container = theme === 'arcade' ? qs('#emulator') : qs('#emulator-console');
   container.innerHTML = '';
@@ -676,7 +723,7 @@ function mountGenesisPlusGX(theme) {
   iframe.allow = 'gamepad; autoplay; fullscreen';
   iframe.setAttribute('allowfullscreen', 'true');
   iframe.setAttribute('frameborder', '0');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+  const html = `<!doctype html><html><head><meta charset="utf-8"><base href="${location.href}"><style>
     html,body{height:100%;margin:0;background:#000;color:#ddd;font-family:system-ui,Segoe UI,Arial,sans-serif}
     #container{position:absolute;inset:0}
     #canvas{display:block;width:100% !important;height:100% !important}
@@ -686,6 +733,7 @@ function mountGenesisPlusGX(theme) {
     Module.canvas = document.createElement('canvas');
     Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; };
     window.onerror = function(msg, src, line, col){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent = 'Sega CD Error: '+msg); } catch(e){} };
+    try { window.addEventListener('error', function(e){ try { var t = parent.qs && parent.qs('#game-title'); if (t) t.textContent = 'Sega CD Error: ' + String(e?.message||'') + (e?.filename?(' @ '+e.filename):''); } catch{} }); } catch{}
   </script>
   </head><body>
     <div id="container"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></div>
@@ -712,21 +760,31 @@ function mountGenesisPlusGX(theme) {
       }
       function startEmulator(){
         var base=String(parent.ROMNAME||'game.chd'); var ext=(base.split('.').pop()||'chd').toLowerCase(); var path='/game.'+ext;
-        var biosName='bios_CD_E.bin';
-        var biosUrl=(function(){ try { return new URL(biosName, parent.location.href).toString(); } catch(e){ return biosName; } })();
-        fetch(biosUrl)
-          .then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); })
-          .catch(function(){
-            var alt='https://raw.githubusercontent.com/12345keddie/Pac-Cade/main/'+encodeURIComponent(biosName);
-            return fetch(alt).then(function(res){ if(!res.ok) throw new Error('BIOS HTTP '+res.status); return res.arrayBuffer(); });
-          })
-          .then(function(buf){
-            var biosData=new Uint8Array(buf);
-            FS.createDataFile('/home/web_user/retroarch/userdata/system', biosName, biosData, true, true);
+        var biosList=['bios_CD_E.bin','bios_CD_U.bin','bios_CD_J.bin'];
+        var dirs=['','assets/bios/','system/','assets/system/'];
+        function fetchOne(name){
+          return new Promise(function(resolve,reject){
+            var idx=0;
+            function next(){
+              if(idx>=dirs.length){ reject(new Error('not found')); return; }
+              var p=dirs[idx++]+name;
+              var u; try { u=new URL(p, parent.location.href).toString(); } catch(e){ u=p; }
+              fetch(u,{cache:'no-store'}).then(function(res){
+                if(!res.ok){ next(); return; }
+                return res.arrayBuffer().then(function(buf){ resolve(new Uint8Array(buf)); });
+              }).catch(function(){ next(); });
+            }
+            next();
+          });
+        }
+        Promise.allSettled(biosList.map(function(n){ return fetchOne(n).then(function(buf){ FS.createDataFile('/home/web_user/retroarch/userdata/system', n, buf, true, true); }); }))
+          .then(function(results){
+            var ok = results.some(function(r){ return r.status==='fulfilled'; });
+            if(!ok){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent='Sega CD Error: BIOS not found'); } catch(e){} return; }
             Module.callMain(['-v', path]);
             resizeEmulatorCanvas(); setTimeout(function(){ resizeEmulatorCanvas(); }, 600);
           })
-          .catch(function(e){ console.error('BIOS error', e); });
+          .catch(function(){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent='Sega CD Error: BIOS load failed'); } catch(e){} });
       }
       function resizeEmulatorCanvas(){ try { container_width=document.getElementById('container').offsetWidth; container_height=document.getElementById('container').offsetHeight; Module.setCanvasSize(container_width, container_height, true); } catch(e){} }
       function toggleSound(v){ try{ if(v){ Module.SDL2.audioContext.resume(); } else { Module.SDL2.audioContext.suspend(); } }catch(e){} }
@@ -737,11 +795,27 @@ function mountGenesisPlusGX(theme) {
       window.addEventListener('load', function(){
         if (typeof Module==='object'){ Module.locateFile = function(n){ if(n.endsWith('.wasm')) return 'genesis_plus_gx_libretro.wasm'; return n; }; Module.canvas = document.getElementById('canvas'); }
         try {
-          var s = document.createElement('script');
-          s.src = 'genesis_plus_gx_libretro.js';
-          s.onerror = function(){ try { parent.qs && parent.qs('#game-title') && (parent.qs('#game-title').textContent = 'Sega CD Error: core script failed to load'); } catch(e){} };
-          s.onload = function(){ wait().then(function(){ loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300); document.getElementById('container').focus(); }); };
-          document.head.appendChild(s);
+          fetch('genesis_plus_gx_libretro.js',{cache:'no-store'})
+            .then(function(res){
+              try { var t = parent.qs && parent.qs('#game-title'); if (t) t.textContent = 'Fetching core... ' + (res.headers&&res.headers.get&&res.headers.get('content-type')||''); } catch{}
+              if(!res.ok) throw new Error('Core HTTP '+res.status);
+              return res.arrayBuffer();
+            })
+            .then(function(buf){
+              var u8 = new Uint8Array(buf);
+              try { var t = parent.qs && parent.qs('#game-title'); if (t) t.textContent = 'Core size: ' + u8.length; } catch{}
+              var txt = '';
+              try { txt = new TextDecoder('utf-8').decode(u8); } catch(e){ txt = ''; }
+              if(!txt || /^\s*</.test(txt)) { throw new Error('Core returned non-JS bytes'); }
+              var ok = false;
+              try { new Function(txt); ok = true; } catch(parseErr){ throw new Error('Core SyntaxError: '+String(parseErr&&parseErr.message||parseErr)); }
+              if(!ok) throw new Error('Core could not be validated');
+              try {
+                new Function(txt)();
+                wait().then(function(){ loadRomIntoVD(); settings_Checker=setInterval(checkSettingsFile, 300); document.getElementById('container').focus(); });
+              } catch(execErr){ throw new Error('Core exec error: '+String(execErr&&execErr.message||execErr)); }
+            })
+            .catch(function(e){ try { var t = parent.qs && parent.qs('#game-title'); if (t) t.textContent = 'Sega CD Error: '+String(e&&e.message||e); } catch{} });
         } catch(e) { console.error('Core load inject error', e); }
       });
     })();</script>
@@ -944,10 +1018,38 @@ function mountN64(theme, romUrl) {
         setTimeout(wait, 1200);
       })();
     <\/script>
+    <script>
+      (function(){
+        function resume(){ try { var ac = window.myApp && window.myApp.audioContext; if (ac && ac.state !== 'running') ac.resume(); } catch(e){} }
+        try { document.addEventListener('click', resume, true); } catch(e){}
+        try { document.addEventListener('keydown', resume, true); } catch(e){}
+        try { document.addEventListener('pointerdown', resume, true); } catch(e){}
+        try {
+          var ov = document.createElement('div');
+          ov.id = 'audio-overlay';
+          ov.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:#fff;font:14px system-ui;z-index:9999';
+          ov.textContent = 'Click to enable sound';
+          document.body.appendChild(ov);
+          function check(){ try{ var ac = window.myApp && window.myApp.audioContext; if (ac && ac.state === 'running') { try{ ov.remove(); }catch(e){} document.removeEventListener('click', handler, true); document.removeEventListener('pointerdown', handler, true); document.removeEventListener('keydown', handler, true); } }catch(e){} }
+          function handler(){ resume(); check(); }
+          document.addEventListener('click', handler, true);
+          document.addEventListener('pointerdown', handler, true);
+          document.addEventListener('keydown', handler, true);
+          setTimeout(check, 1500);
+        } catch(e){}
+      })();
+    <\/script>
   </body></html>`;
   iframe.srcdoc = html;
   container.appendChild(iframe);
   
+  try {
+    function parentResume(){ try { var host = iframe.contentWindow; var ac = host && host.myApp && host.myApp.audioContext; if (host && host.myApp && !host.myApp.audioInited) { host.myApp.initAudio(); } if (ac && ac.state !== 'running') ac.resume(); } catch(e){} }
+    document.addEventListener('click', parentResume, true);
+    document.addEventListener('pointerdown', parentResume, true);
+    document.addEventListener('keydown', parentResume, true);
+  } catch(e){}
+
   setTimeout(() => { try { attachInnerKeyMapper(iframe.contentWindow); } catch {} }, 1800);
   setTimeout(() => { try { notifyEmulatorResize(); } catch {} }, 2000);
 }
@@ -1936,6 +2038,7 @@ async function exitFullscreen() {
   }
   const KeyMapper = (() => {
     let mapping = null;
+    let forwarding = false;
     function set(map) { mapping = map || null; }
     function translate(code) { if (!mapping) return code; const k = Object.keys(mapping).find(k => k.toLowerCase() === code.toLowerCase()); return k ? mapping[k] : code; }
     function onEv(e) {
@@ -1952,17 +2055,22 @@ async function exitFullscreen() {
         const nc = translate(e.code);
         const forward = state.currentView === 'game' && !isFocusInsideEmulator();
         if (!forward && nc === e.code) return;
+        if (forwarding) return;
         e.preventDefault();
         e.stopPropagation();
         const targetWin = getEmulatorTargetWindow();
         const targetDoc = targetWin?.document;
-        if (typeof targetWin.sendVirtualKey === 'function') {
-          targetWin.sendVirtualKey(e.type, nc);
-        } else {
-          const ev = new KeyboardEvent(e.type, { key: codeToKey(nc), code: nc, repeat: e.repeat, altKey: e.altKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, metaKey: e.metaKey, bubbles: true, cancelable: true });
-          try { targetDoc?.body?.dispatchEvent(ev); } catch {}
-          try { targetDoc?.dispatchEvent(ev); } catch {}
-          try { targetWin?.dispatchEvent(ev); } catch {}
+        forwarding = true;
+        try {
+          if (typeof targetWin.sendVirtualKey === 'function') {
+            targetWin.sendVirtualKey(e.type, nc);
+          } else {
+            const ev = new KeyboardEvent(e.type, { key: codeToKey(nc), code: nc, repeat: e.repeat, altKey: e.altKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, metaKey: e.metaKey, bubbles: true, cancelable: true });
+            try { targetDoc?.body?.dispatchEvent(ev); } catch {}
+            try { targetDoc?.dispatchEvent(ev); } catch {}
+          }
+        } finally {
+          forwarding = false;
         }
       } catch {}
     }
