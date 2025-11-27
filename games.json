@@ -6,6 +6,7 @@
   ],
   "console": [
     { "name": "Super Mario World", "core": "snes", "rom": "Super Mario World.sfc", "aspect": "4/3" },
-    { "name": "Super Mario Kart", "core": "snes", "rom": "Super Mario Kart.sfc", "aspect": "4/3" }
+    { "name": "Super Mario Kart", "core": "snes", "rom": "Super Mario Kart.sfc", "aspect": "4/3" },
+    { "name": "Mario Kart: Super Circuit", "core": "gba", "rom": "Mario Kart - Super Circuit.gba", "aspect": "3/2" }
   ]
 }
