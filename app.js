@@ -1863,9 +1863,9 @@ function setupNavigation() {
 }
 
 setupNavigation();
+showRoom('arcade');
 loadGames().then(() => {
   renderRooms();
-  showRoom('arcade');
 });
 
 async function loadGames() {
