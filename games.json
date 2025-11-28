@@ -1,8 +1,7 @@
 {
   "arcade": [
     { "name": "Super Street Fighter II Turbo", "core": "mame32", "rom": "ssf2t.zip", "aspect": "4/3" },
-    { "name": "Street Fighter III: 3rd Strike", "core": "mame32", "rom": "sfiii3.zip", "aspect": "4/3" },
-    
+    { "name": "Street Fighter III: 3rd Strike", "core": "mame32", "rom": "sfiii3.zip", "aspect": "4/3" }
   ],
   "console": [
     { "name": "Super Mario World", "core": "snes", "rom": "Super Mario World.sfc", "aspect": "4/3" },

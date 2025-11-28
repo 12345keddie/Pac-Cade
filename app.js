@@ -1863,9 +1863,10 @@ function setupNavigation() {
 }
 
 setupNavigation();
-showRoom('arcade');
 loadGames().then(() => {
   renderRooms();
+  const init = (state.games.console && state.games.console.length) ? 'console' : 'arcade';
+  showRoom(init);
 });
 
 async function loadGames() {
