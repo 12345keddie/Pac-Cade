@@ -1136,6 +1136,16 @@ function setupNavigation() {
     state.selectedGame = { name: el.dataset.name, core: el.dataset.core, rom: el.dataset.rom, aspect: el.dataset.aspect };
     toGameView('arcade');
   });
+  const remoteInput = qs('#remote-search');
+  const remoteBtn = qs('#remote-search-btn');
+  const remoteClear = qs('#remote-clear-btn');
+  if (remoteBtn && remoteInput) {
+    remoteBtn.addEventListener('click', () => { searchRemoteArcade(remoteInput.value); });
+    remoteInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchRemoteArcade(remoteInput.value); });
+  }
+  if (remoteClear) {
+    remoteClear.addEventListener('click', () => { state.remoteArcade = []; renderRooms(); remoteClear.classList.add('hidden'); });
+  }
   consoleList.addEventListener('click', (e) => {
     const el = e.target.closest('.game-box');
     if (!el) return;
@@ -1909,6 +1919,28 @@ function gameBoxHTML(g) {
 
 function escapeHtml(s='') {
   return String(s).replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+const REMOTE_ARCADE_INDEX = 'https://myrient.erista.me/files/Internet%20Archive/chadmaster/fbnarcade-fullnonmerged/arcade/';
+async function searchRemoteArcade(query) {
+  try {
+    const q = String(query||'').trim().toLowerCase();
+    const res = await fetch(REMOTE_ARCADE_INDEX, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Remote index not available');
+    const html = await res.text();
+    const links = Array.from(html.matchAll(/href\s*=\s*"([^"]+\.zip)"/gi)).map(m => m[1]);
+    const items = links.filter(h => !q || h.toLowerCase().includes(q)).slice(0, 30).map(href => {
+      const url = new URL(href, REMOTE_ARCADE_INDEX).toString();
+      const name = decodeURIComponent(href.replace(/\/$/, '')).replace(/\.zip$/i,'');
+      return { name, core: 'mame32', rom: url, aspect: '4/3' };
+    });
+    state.remoteArcade = items;
+    renderRooms();
+    const clr = qs('#remote-clear-btn'); if (clr) clr.classList.toggle('hidden', !(items && items.length));
+  } catch (e) {
+    state.remoteArcade = [];
+    renderRooms();
+    showErrorBanner('Remote search failed: '+ (e && e.message ? e.message : 'unknown error'));
+  }
 }
 async function preferEmulatrix(core, path) {
   const ext = (path?.split('.').pop() || '').toLowerCase();

@@ -85,6 +85,9 @@ body {
   color: #9fb1c9;
 }
 
+.search-row { display:flex; gap:8px; align-items:center; margin: 8px 0 12px; }
+.search-row input { flex:1; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#0f1422; color:#e6e8ee; }
+
 /* Console Room */
 .console-scene {
   display: grid;
